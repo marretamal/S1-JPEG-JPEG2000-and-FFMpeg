@@ -1,5 +1,8 @@
 import ffmpeg
 from os import remove
+from PIL import Image
+import numpy as np
+
 
 class ColorCoordsConverter:
 
@@ -38,6 +41,33 @@ class FFmpeg:
         )
         print(f"Image resized and saved to: {output_path}")
 
+def serpentine(file):
+    img = Image.open(file).convert("RGB")
+    width, height = img.size
+    pixels = img.load()
+    serp = []
+
+    for diagonal in range(width + height - 1):
+
+        #if we are in even diagonals we go up to the right
+        if diagonal % 2 == 0:
+            y = min(diagonal, height - 1)
+            x = diagonal - y
+            while y >= 0 and x < width:
+                serp.append(pixels[x, y])
+                x += 1
+                y -= 1
+
+        # if we are in odd diagonals we go down to the left
+        else:
+            x = min(diagonal, width - 1)
+            y = diagonal - x
+            while x >= 0 and y < height:
+                serp.append(pixels[x, y])
+                x -= 1
+                y += 1
+
+    return serp #return the list of pixels coordinates in serpentine order
 
 
 #we test the code
@@ -54,9 +84,16 @@ print("Back to RGB:", (r2, g2, b2))
 
 
 # TESTING EXERCISE 3
-FFmpeg.resize_image(
-    path="/Users/marretamal/Desktop/video_coding/S1-JPEG-JPEG2000-and-FFMpeg/selfie2.jpeg",
-    new_width=320,
-    new_height=240,
-    output_path="/Users/marretamal/Desktop/video_coding/S1-JPEG-JPEG2000-and-FFMpeg/output_coding.png"
-)
+# FFmpeg.resize_image(
+#     path="/Users/marretamal/Desktop/video_coding/S1-JPEG-JPEG2000-and-FFMpeg/selfie2.jpeg",
+#     new_width=320,
+#     new_height=240,
+#     output_path="/Users/marretamal/Desktop/video_coding/S1-JPEG-JPEG2000-and-FFMpeg/output_coding.png"
+# )
+
+# TESTING EXERCISE 4
+pixels_serpentine = serpentine("selfie2.jpeg")
+for i in range(20):
+    print(pixels_serpentine[i])
+
+
