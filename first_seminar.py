@@ -1,3 +1,6 @@
+import ffmpeg
+from os import remove
+
 class ColorCoordsConverter:
 
 
@@ -18,6 +21,24 @@ class ColorCoordsConverter:
 
         return r, g, b
 
+class FFmpeg:
+
+    def resize_image(path, new_width, new_height, output_path):
+        try:
+            remove(output_path)
+        except FileNotFoundError:
+            pass
+
+        (
+            ffmpeg
+            .input(path)
+            .filter("scale", new_width, new_height)
+            .output(output_path)
+            .run()
+        )
+        print(f"Image resized and saved to: {output_path}")
+
+
 
 #we test the code
 
@@ -29,3 +50,13 @@ print("YUV:", (y, u, v))
 
 r2, g2, b2 = ColorCoordsConverter.yuv_to_rgb(y, u, v)
 print("Back to RGB:", (r2, g2, b2))
+
+
+
+# TESTING EXERCISE 3
+FFmpeg.resize_image(
+    path="/Users/marretamal/Desktop/video_coding/S1-JPEG-JPEG2000-and-FFMpeg/selfie2.jpeg",
+    new_width=320,
+    new_height=240,
+    output_path="/Users/marretamal/Desktop/video_coding/S1-JPEG-JPEG2000-and-FFMpeg/output_coding.png"
+)
