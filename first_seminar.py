@@ -70,6 +70,22 @@ def serpentine(file):
     return serp #return the list of pixels coordinates in serpentine order
 
 
+def compress_to_grayscale(input_path, output_path):
+        try:
+            remove(output_path)
+        except FileNotFoundError:
+            pass
+        (
+            ffmpeg
+            .input(input_path)
+            .filter("format", "gray")     # convert to black & white
+            .output(output_path, vcodec='mjpeg', qscale=31)  # maximum compression with a quality scale of 31
+            .run()
+        )
+        print("Grayscale compressed image saved to:", output_path)
+
+
+
 #we test the code
 
 R, G, B = 100, 150, 200
@@ -96,4 +112,6 @@ pixels_serpentine = serpentine("selfie2.jpeg")
 for i in range(20):
     print(pixels_serpentine[i])
 
-
+# TESTING EXERCISE 5
+compress_to_grayscale("selfie2.jpeg", "selfie3_gray_compressed.png")
+print("Done. Output:", "selfie3_gray_compressed.png")
