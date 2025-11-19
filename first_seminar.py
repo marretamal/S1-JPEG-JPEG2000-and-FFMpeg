@@ -2,6 +2,7 @@ import ffmpeg
 from os import remove
 from PIL import Image
 import numpy as np
+from scipy.fftpack import dct, idct
 
 
 class ColorCoordsConverter:
@@ -103,6 +104,48 @@ def run_length_encoding_zeros(byte_list):
 
     return encoded
 
+class DCTTools: # apply 2D DCT and IDCT to 8x8 blocks of an image (simplified version of what JPEG does)
+
+    def dct_2d(block): #DCT to an 8x8 block
+        block = np.array(block, dtype=float)
+        return dct(dct(block.T, norm='ortho').T, norm='ortho')
+
+    def idct_2d(block): #inverse DCT to an 8x8 block (reconstruct original values)
+        block = np.array(block, dtype=float)
+        return idct(idct(block.T, norm='ortho').T, norm='ortho')
+
+    def image_to_blocks(img_path): #convert image to 8x8 blocks for DCT processing
+        img = Image.open(img_path).convert("L")
+        arr = np.array(img, dtype=float)
+
+        h, w = arr.shape
+        blocks = []
+
+        for y in range(0, h, 8):
+            for x in range(0, w, 8):
+                block = arr[y:y+8, x:x+8]
+
+                # If the block is not 8×8 (image size not divisible)
+                if block.shape == (8, 8):
+                    blocks.append(block)
+
+        return blocks
+
+    def blocks_to_image(blocks, image_shape): #reconstruct image from 8x8 blocks (used after IDCT)
+        h, w = image_shape
+        arr = np.zeros((h, w))
+
+        index = 0
+        for y in range(0, h, 8):
+            for x in range(0, w, 8):
+                arr[y:y+8, x:x+8] = blocks[index]
+                index += 1
+
+        return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
+
+
+
+
 
 # TESTING EXERCISE 2
 R, G, B = 100, 150, 200
@@ -115,13 +158,12 @@ r2, g2, b2 = ColorCoordsConverter.yuv_to_rgb(y, u, v)
 print("Back to RGB:", (r2, g2, b2))
 
 
-
 # TESTING EXERCISE 3
 # FFmpeg.resize_image(
-#     path="/Users/marretamal/Desktop/video_coding/S1-JPEG-JPEG2000-and-FFMpeg/selfie2.jpeg",
+#     path="selfie2.jpeg",
 #     new_width=320,
 #     new_height=240,
-#     output_path="/Users/marretamal/Desktop/video_coding/S1-JPEG-JPEG2000-and-FFMpeg/output_coding.png"
+#     output_path="output_coding.png"
 # )
 
 # # TESTING EXERCISE 4
@@ -138,3 +180,19 @@ print("Back to RGB:", (r2, g2, b2))
 # encoded = run_length_encoding_zeros(data)
 # print("Original: ", data)
 # print("Encoded : ", encoded)
+
+# # TESTING EXERCISE 6
+
+# blocks = DCTTools.image_to_blocks("selfie2.jpeg")
+# first_block = blocks[0]
+
+# print("Original 8×8 block:")
+# print(first_block)
+
+# dct_block = DCTTools.dct_2d(first_block)
+# print("\nAfter DCT:")
+# print(np.round(dct_block))
+
+# idct_block = DCTTools.idct_2d(dct_block)
+# print("\nAfter inverse DCT (reconstructed):")
+# print(np.round(idct_block))
